@@ -1,0 +1,30 @@
+# Verilog/software like file system. High file counts with small files
+#
+# distribution=all,width=4,depth=8,files=1500 will create (((4^(8 + 1)) - 1 / (4 - 1))  - 1) * 1200 = 104,856,000 files @ 25.6 Kib avg = 2560 GiB
+# width=4,depth=7,files=40 = 4 ^ 7 * 150 = 2457600 files @ 25.6 KiB avg = 60 GiB
+#
+# The followind FSD uses the $host variable which will cause the value to be replaced
+# by each host name. Be careful with the number of hosts used this way.
+# If you have 8 hosts and 6 JVM per host for 48 process, then the below setting
+# will create 2,457,600 files/process * 48 process = 117,964,800 total files
+
+fsd=fs_eda_verilog_$host,anchor=/mnt/isilon/test/verilog/$host,width=4,depth=7,files=40,sizes=(1k,10,2k,10,4k,10,8k,50,16k,5,32k,5,64k,5,128k,4,1M,1)
+
+# Shared file system versions
+# fsd=fs_eda_verilog,anchor=/mnt/isilon/test/verilog,shared=yes,width=4,depth=8,files=40,sizes=(1k,10,2k,10,4k,10,8k,50,16k,5,32k,5,64k,5,128k,4,1M,1)
+#fsd=fs_eda_verilog,anchor=/mnt/isilon/test/verilog,shared=yes,distribution=all,width=4,depth=8,files=1200,sizes=(1k,10,2k,10,4k,10,8k,50,16k,5,32k,5,64k,5,128k,4,1M,1)
+
+# Below is the Verilog small file system profile. It has a lot fewer files but combined with other workloads it is still very good
+# distribution=all,width=4,depth=7,files=1500 will create (((4^(6 + 1)) - 1 / (4 - 1)) - 1) * 1500 = 32,766,000 files @ 25.6 Kib avg = 799 GiB
+
+fsd=fs_eda_verilogsmall,anchor=/mnt/isilon/test/verilog_small,shared=yes,distribution=all,width=4,depth=7,files=1500,sizes=(1k,10,2k,10,4k,10,8k,50,16k,5,32k,5,64k,5,128k,4,1M,1)
+
+# Primetime like file system (large files)
+# 2^8 = 256 * 10 files = 2560 files @ 3 GiB/file = 7680 GB
+
+fsd=fs_eda_pt,anchor=/mnt/isilon/test/pt,shared=yes,width=2,depth=8,files=10,size=(1G,50,5G,50)
+
+# General medium sized files for throughput and filling up storage
+# width=10,depth=4,files= will create 10^4 * 10 files = 1,000,000 files @ 100 MiB each is approx 9.5 TiB
+
+fsd=fs_eda_io,anchor=/mnt/isilon/test/throughput,shared=yes,width=10,depth=4,files=10,size=100M

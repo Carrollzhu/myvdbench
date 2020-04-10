@@ -1,0 +1,38 @@
+# Hosts definition
+
+# Default parameters
+# hd=default,vdbench=/mnt/isilon/vdbench,shell=vdbench
+hd=default,vdbench=/mnt/isilon/vdbench,user=root,shell=ssh
+
+hd=client1_1,system=172.16.85.181
+hd=client1_2,system=172.16.85.181
+hd=client2_1,system=172.16.85.182
+hd=client2_2,system=172.16.85.182
+hd=client3_1,system=172.16.85.183
+hd=client3_2,system=172.16.85.183
+hd=client4_1,system=172.16.85.184
+hd=client4_2,system=172.16.85.184
+hd=client5_1,system=172.16.85.185
+hd=client5_2,system=172.16.85.185
+hd=client6_1,system=172.16.85.186
+hd=client6_2,system=172.16.85.186
+hd=client7_1,system=172.16.85.187
+hd=client7_2,system=172.16.85.187
+hd=client8_1,system=172.16.85.188
+hd=client8_2,system=172.16.85.188
+hd=client9_1,system=172.16.85.189
+hd=client9_2,system=172.16.85.189
+hd=client10_1,system=172.16.85.190
+hd=client10_2,system=172.16.85.190
+hd=client11_1,system=172.16.85.193
+hd=client11_2,system=172.16.85.193
+hd=client12_1,system=172.16.85.196
+hd=client12_2,system=172.16.85.196
+hd=client13_1,system=172.16.85.197
+hd=client13_2,system=172.16.85.197
+hd=client14_1,system=172.16.85.198
+hd=client14_2,system=172.16.85.198
+hd=client15_1,system=172.16.85.199
+hd=client15_2,system=172.16.85.199
+hd=client16_1,system=172.16.85.200
+hd=client16_2,system=172.16.85.200

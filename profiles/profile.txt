@@ -1,0 +1,257 @@
+# ====================
+# General settings
+# ====================
+# Setting messagescan=no, this should only be done after testing shows you can ignore /var/log/messages
+# output from the clients. Sometimes the output is useful for identifying issues with the benchmark
+# setup
+messagescan=no
+
+
+
+
+# ====================
+# Host definition
+#
+# This section imports a list of hosts
+# The number of hosts is very important as it defines how many machines will be running the benchmarks
+# as well as for some work flows, it will determine the number of file systems that are defined.
+# Be caureful to look for FSD (file system definitions) that use the $host parameters
+# ====================
+# hosts_2 defines 2 JVMs per host
+include=/mnt/isilon/vdbench/test_profiles/hosts_2.txt
+# hosts_4 defines 4 JVMs per host
+#include=/mnt/isilon/vdbench/test_profiles/hosts_4.txt
+# hosts_6 defines 6 JVMs per host
+#include=/mnt/isilon/vdbench/test_profiles/hosts_6.txt
+
+
+
+
+
+# ====================
+# File system definition
+#
+# When defining the directory structure, be careful with the width and depth numbers.
+# By default, only files at the leaf of the directory structure are populated with files
+# To calculate the number of leaf directories the formula is: width ^ depth
+# e.g. width=4 and depth=3, 4^3 = 64
+# Each directory will have a number of files as configured.
+# e.g. width=4,depth=3,files=100 would give a total of 64 * 100 files = 6,400 files in total
+# The total number of directories is greater as the calculation above only finds leaf directories
+# To find the total number of directories, minus the root, the calculation is:
+# ( (width ^ (depth + 1)) - 1 / (width - 1) ) - 1
+# ====================
+include=/mnt/isilon/vdbench/test_profiles/nitro_fsd.txt
+
+
+
+
+
+# ====================
+# Workload definition
+# ====================
+#
+# Note: If you need to add file create/delete pairs, you can use the following options
+#       operation=write,fileio=(seq,delete)
+#       Be aware that whatever skew you use, the number of ops you request will first
+#       be assigned to the main operation, in this case writes.
+#       The number of creates and deletes generated can vary depending on file size
+#       For example, a OPS rate of 10,000 can result in the mix below. Test to see
+#       what type of skew setting you need when adding creates/deletes
+#         12,000 access operations
+#         25,000 lookup operations
+#         8600 remove operations
+#         8600 create operations
+#         8600 open operations
+#         8600 close operations
+#         8600 write operations
+#
+# Configure the default workload settings here. A lot of I/O for systems is actually sequential
+# in nature. What is random is the choice of files that is used.
+fwd=default,fileio=sequential,fileselect=random,xfersizes=1M
+# Modify the defaults used by vdbench when it formats a file system. You must specify threads
+# and the xfersize here. Only these 2 paramters make any difference to the formatting.
+fwd=format,threads=128,xfersize=128K
+
+
+
+
+# =====
+# EDA mix
+# =====
+fwd=eda_mix_1,fsd=(fs_eda_verilogsmall,fs_eda_io,fs_eda_pt),xfersize=64K,operation=getattr,skew=42
+fwd=eda_mix_2,fsd=(fs_eda_verilogsmall,fs_eda_io,fs_eda_pt),xfersize=64K,operation=access,skew=19
+fwd=eda_mix_3,fsd=(fs_eda_verilogsmall,fs_eda_io,fs_eda_pt),xfersize=64K,operation=setattr,skew=2
+fwd=eda_mix_4,fsd=(fs_eda_verilogsmall,fs_eda_io,fs_eda_pt),xfersize=64K,operation=read,skew=16
+fwd=eda_mix_5,fsd=(fs_eda_verilogsmall,fs_eda_io,fs_eda_pt),xfersize=64K,operation=write,skew=20
+fwd=eda_mix_6,fsd=(fs_eda_verilogsmall,fs_eda_io,fs_eda_pt),xfersize=64K,operation=write,skew=1,fileio=(seq,delete)
+
+
+# =====
+# Verilog SMALL
+# =====
+fwd=eda_verilogsmall_1,fsd=fs_eda_verilogsmall,xfersize=8K,operation=getattr,skew=42
+fwd=eda_verilogsmall_2,fsd=fs_eda_verilogsmall,xfersize=8K,operation=setattr,skew=18
+fwd=eda_verilogsmall_3,fsd=fs_eda_verilogsmall,xfersize=32k,operation=read,skew=30
+fwd=eda_verilogsmall_4,fsd=fs_eda_verilogsmall,xfersize=32K,operation=write,skew=9
+fwd=eda_verilogsmall_5,fsd=fs_eda_verilogsmall,xfersize=32K,operation=write,skew=1,fileio=(seq,delete)
+
+# =====
+# Verilog
+# =====
+# This workload does not used a shared file system. Each process will create its own directory
+# structure based on the host. This is done by adding the host= parameter to the definition.
+# This will restrict this fwd to a specific host. However becuase of this change, we cannot
+# easily use the skew parameter to create work load percentages. To emulate the same behavior
+# we create multipled fwd with the same operation thus manually creating a correct workload
+# mix. This method is more coarse and you can only easily do 10% or 5% skews of the workload.
+# To do 10% skews you need 10 fwd lines and to do 5% skews you need 20 fwd lines
+# This will also require a decrease in the number of threads to a small number like 1 or 2 as
+# each host will have #fwd*#hosts*threads running. This needs to be set at the run definition
+fwd=eda_verilog_1_$host_1,host=$host,fsd=fs_eda_verilog_$host,xfersize=64k,operation=getattr
+fwd=eda_verilog_1_$host_2,host=$host,fsd=fs_eda_verilog_$host,xfersize=64k,operation=getattr
+fwd=eda_verilog_1_$host_3,host=$host,fsd=fs_eda_verilog_$host,xfersize=64k,operation=getattr
+fwd=eda_verilog_1_$host_4,host=$host,fsd=fs_eda_verilog_$host,xfersize=64k,operation=getattr
+fwd=eda_verilog_2_$host_1,host=$host,fsd=fs_eda_verilog_$host,xfersize=64k,operation=setattr
+fwd=eda_verilog_2_$host_2,host=$host,fsd=fs_eda_verilog_$host,xfersize=64k,operation=setattr
+fwd=eda_verilog_3_$host_1,host=$host,fsd=fs_eda_verilog_$host,xfersize=64k,operation=read
+fwd=eda_verilog_3_$host_2,host=$host,fsd=fs_eda_verilog_$host,xfersize=64k,operation=read
+fwd=eda_verilog_3_$host_3,host=$host,fsd=fs_eda_verilog_$host,xfersize=64k,operation=read
+fwd=eda_verilog_4_$host,host=$host,fsd=fs_eda_verilog_$host,xfersize=64k,operation=write
+# Below is a shared workload version, similar to the verilog SMALL
+#fwd=eda_verilog_1,,fsd=fs_eda_verilog,xfersize=64k,operation=getattr,skew=40
+#fwd=eda_verilog_2,fsd=fs_eda_verilog,xfersize=64k,operation=access,skew=2
+#fwd=eda_verilog_3,fsd=fs_eda_verilog,xfersize=64k,operation=setattr,skew=18
+#fwd=eda_verilog_4,fsd=fs_eda_verilog,xfersize=64k,operation=read,skew=30
+#fwd=eda_verilog_5,fsd=fs_eda_verilog,xfersize=64k,operation=write,skew=10
+
+
+# =====
+# Primetime
+# =====
+fwd=eda_pt_1,fsd=fs_eda_pt,xfersize=1M,fileio=sequential,operation=getattr,skew=5
+fwd=eda_pt_2,fsd=fs_eda_pt,xfersize=1M,fileio=sequential,operation=read,skew=5
+fwd=eda_pt_3,fsd=fs_eda_pt,xfersize=1M,fileio=sequential,operation=write,skew=90
+
+
+# =====
+# 100% metadata read
+# =====
+fwd=eda_meta_read,fsd=fs_eda_verilogsmall,xfersize=64k,operation=getattr
+
+
+# =====
+# Read throughput
+# =====
+fwd=eda_io_read,fsd=fs_eda_io,xfersize=1M,fileio=sequential,operation=read
+
+
+# =====
+# Write throughput
+# =====
+fwd=eda_io_write,fsd=fs_eda_io,xfersize=1M,fileio=sequential,operation=write
+
+
+
+
+
+# ====================
+# Actual benchmark run definitions
+# ====================
+# The following run definition default includes the directio option. This will attempt to
+# bypass the client cache which you normally will want to do in a benchmark. Otherwise you
+# may be testing how good your local cache is
+# rd=default,threads=320,fwdrate=max,interval=5,pause=600,elapsed=1200,openflags=directio
+
+# The following line removes the directio flag
+rd=default,threads=192,fwdrate=max,interval=5,pause=600,elapsed=1200
+
+
+# =====
+# Test run file create definitions
+#
+# Note: Uncomment both 'rd' for each profile to start fresh. The first 'rd' will delete any existing files
+#       and the second one will create/update the file system to the correct configuration. The run
+#       definitions below only delete or create files.
+# =====
+# Create Verilog file set
+# rd=verilog_create_clean,fwd=eda_verilog_*,format=(clean,only)
+#rd=verilog_create,fwd=eda_verilog_*,format=(restart,only)
+
+# Create Verilog SMALL file set
+#rd=verilog_s_create_clean,fwd=eda_verilogsmall_1,format=(clean,only)
+#rd=verilog_s_create,fwd=eda_verilogsmall_1,format=(restart,only)
+
+# Create Primetime file set
+#rd=pt_create_clean,fwd=eda_pt_1,format=(clean,only)
+#rd=pt_create,fwd=eda_pt_1,format=(restart,only)
+
+# Create throughput file set
+#rd=throughput_create_clean,fwd=eda_io_read,format=(clean,only)
+#rd=throughput_create,fwd=eda_io_read,format=(restart,only)
+
+# Create EDA mix file set
+# rd=eda_create_clean,fwd=eda_mix_1,format=(clean,only)
+# rd=eda_create,fwd=eda_mix_1,format=(restart,only)
+
+
+# =====
+# Test run definitions
+#
+# Uncomment run definitions below to perform a specific benchmark run
+#
+# =====
+# Test verilog small
+# Definition which tries to find the maximum performance
+# rd=eda_verilogsmall_run,fwd=eda_verilogsmall_*,format=restart,fwdrate=max,elapsed=180,threads=600
+#rd=nitro_eda_verilogsmall_run,fwd=eda_verilogsmall_*,format=restart,fwdrate=(60000-160000,20000)
+
+
+
+
+# Test PT mix
+# Definition which tries to find the maximum performance
+# rd=eda_pt_run,fwd=eda_pt_*,format=restart,fwdrate=max,elapsed=300,xfersize=128k
+#rd=nitro_eda_pt_run,fwd=eda_pt_*,format=restart,fwdrate=25000,xfersize=128k,elapsed=600
+#rd=nitro_eda_pt_run,fwd=eda_pt_*,format=restart,fwdrate=50000,xfersize=128k,elapsed=600
+
+
+
+
+# Test read throughput
+# Definition which tries to find the maximum performance
+#rd=eda_io_read_run,fwd=eda_io_read,format=restart,fwdrate=max,elapsed=180
+#rd=nitro_eda_io_read_run,fwd=eda_io_read,format=restart,fwdrate=(5000-50000,5000)
+#rd=nitro_eda_io_read_run,fwd=eda_io_read,format=restart,fwdrate=(50000-100000,10000)
+
+
+
+
+# Test read meta
+# Definition which tries to find the maximum performance
+# rd=eda_meta_read_run,fwd=eda_meta_read,format=restart,fwdrate=max,elapsed=180
+#rd=nitro_eda_meta_read_run,fwd=eda_meta_read,format=restart,fwdrate=(200000-350000,10000)
+
+
+
+
+# Test Verilog mix
+#
+# The Verilog mix overrides the normal threads count due to the way this profile is configured.
+# Because the profile is using independent directories and hosts, the thread number is not a total
+# threads across the entire workload, instead it is the number of threads per fwd.
+# The standard configuration has 10 fwd defined per host. A threads setting of 1 would make each
+# host have 10 threads running.
+#
+# Definition which tries to find the maximum performance
+# rd=eda_verilog_run,fwd=eda_verilog_*,format=restart,fwdrate=max,elapsed=360,threads=1
+#rd=nitro_eda_verilog_run,fwd=eda_verilog_*,format=restart,fwdrate=(40000-180000,20000),threads=1
+
+
+
+
+# Test EDA mix
+# Definition which tries to find the maximum performance
+# rd=eda_mix_run,fwd=eda_mix_*,format=restart,fwdrate=max,elapsed=360
+# rd=s210_eda_mix_run,fwd=eda_mix_*,format=restart,fwdrate=(80000-200000,20000)
+rd=nitro_eda_mix_run,fwd=eda_mix_*,format=restart,fwdrate=(200000-800000,50000)

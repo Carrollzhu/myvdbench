@@ -1,0 +1,1 @@
+/mnt/isilon/vdbench/vdbench -f /mnt/isilon/vdbench/test_profiles/profile.txt -o /mnt/isilon/results/15_eda_mix_run
